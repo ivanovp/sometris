@@ -1,4 +1,9 @@
 This is a tetris-like game for Papilio One 500K + Aracade Megawing.
 You need a VGA monitor and optionally a Atari/Commodore compatible joystick.
+I've used Papilio ZAP IDE 2.3.0.
+The included bit file is configured to use internal pull-up resistors 
+for joystick input. Forked ZPUino-HDL can be found here:
+https://github.com/ivanovp/ZPUino-HDL
+
 Short demo of game:
 http://youtu.be/mgOM_ePGLvY

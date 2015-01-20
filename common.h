@@ -4,7 +4,7 @@
  * @author      Copyright (C) Peter Ivanov, 2011, 2012, 2013, 2014
  *
  * Created      2011-01-19 11:48:53
- * Last modify: 2014-12-30 09:56:10 ivanovp {Time-stamp}
+ * Last modify: 2015-01-20 17:57:21 ivanovp {Time-stamp}
  * Licence:     GPL
  */
 
@@ -57,10 +57,6 @@
 
 #define KEY_DELTA_SIZE      32  /* Must be power of 2! */
 #define KEY_DELTA_IDX_MASK  (KEY_DELTA_SIZE - 1)
-
-#define MAX_RECORD_NUM      10
-#define PLAYER_NAME_LENGTH  9
-#define MAX_PLAYERS         12
 
 typedef unsigned char uint8_t;
 typedef unsigned short uint16_t;

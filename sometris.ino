@@ -4,7 +4,7 @@
  * @author      (C) Peter Ivanov, 2013, 2014, 2015
  * 
  * Created:     2013-12-23 11:29:32
- * Last modify: 2015-01-19 20:33:15 ivanovp {Time-stamp}
+ * Last modify: 2015-01-20 17:56:18 ivanovp {Time-stamp}
  * Licence:     GPL
  */
 #include "common.h"
@@ -18,6 +18,7 @@
 #define CHARRAMPTR          REGISTER(CHARRAMBASE,0);
 
 #define USE_JOYSTICK_A      1
+#define USE_JOYSTICK_B      1
 #define DEBUG_JOYSTICK      0
 #define ENABLE_COLOR_TEST   0
 
@@ -76,7 +77,6 @@ void delay_ms (uint16_t ms)
 
 void setup_pin_select()
 {
-#if 0
   pinMode(VGA_HSYNC,OUTPUT);
   digitalWrite(VGA_HSYNC,HIGH);
   outputPinForFunction(VGA_HSYNC, 15);
@@ -116,7 +116,14 @@ void setup_pin_select()
 //  digitalWrite(VGA_BLUE1,HIGH);
 //  outputPinForFunction(VGA_BLUE1, 13);
 //  pinModePPS(VGA_BLUE1, HIGH);     
-#endif
+}
+
+void setup()
+{
+  Serial.begin(9600);
+  //Uncomment this if you are using the pinselect variant
+  //setup_pin_select();
+
 #if USE_JOYSTICK_A == 1
   // Atari Joystick on DSUB9 connector
   pinMode (WC12, OUTPUT);    // GND
@@ -127,13 +134,17 @@ void setup_pin_select()
   pinMode (WC9, INPUT);
   pinMode (WC8, INPUT);
 #endif
-}
-
-void setup()
-{
-  Serial.begin(9600);
-  //Uncomment this if you are using the pinselect variant
-  setup_pin_select();
+  
+#if USE_JOYSTICK_B == 1
+  // Atari Joystick on DSUB9 connector
+  pinMode (WA0, OUTPUT);    // GND
+  digitalWrite (WA0, LOW);  // set low
+  pinMode (WB12, INPUT);
+  pinMode (WB14, INPUT);
+  pinMode (WB15, INPUT);
+  pinMode (WA1, INPUT);
+  pinMode (WB13, INPUT);
+#endif
   
   clear();
   
@@ -173,6 +184,16 @@ void check_joystick()
   actRight |= digitalRead (WC13) == HIGH ? LOW : HIGH;
   actTrigger |= digitalRead (WC9) == HIGH ? LOW : HIGH;
 #endif
+
+#if USE_JOYSTICK_B == 1
+  // Joystick B
+  actUp |= digitalRead (WB12) == HIGH ? LOW : HIGH;
+  actDown |= digitalRead (WB14) == HIGH ? LOW : HIGH;
+  actLeft |= digitalRead (WB15) == HIGH ? LOW : HIGH;
+  actRight |= digitalRead (WA1) == HIGH ? LOW : HIGH;
+  actTrigger |= digitalRead (WB13) == HIGH ? LOW : HIGH;
+#endif
+
   upPressed = false;
   downPressed = false;
   leftPressed = false;
@@ -244,10 +265,7 @@ void check_joystick()
 }
 
 /**
- * @brief init
  * Initialize game.
- *
- * @return TRUE: if successfully initialized. FALSE: error occurred.
  */
 void init (void)
 {
@@ -264,6 +282,10 @@ void init (void)
     }
 }
 
+/**
+ * Time between user's key press is a real random number, so
+ * we collect all.
+ */
 void collectRandomNumbers (void)
 {
     uint32_t key_time;
@@ -281,7 +303,6 @@ void collectRandomNumbers (void)
 }
 
 /**
- * @brief handleMovement
  * Handle button presses and move figure according to that.
  */
 void handleMovement (void)
@@ -355,15 +376,12 @@ void handleMovement (void)
 }
 
 /**
- * @brief handle_main_state_machine
  * Check inputs and change state machine if it is necessary.
  * @return TRUE: if user plays game again.
  */
 bool_t handleMainStateMachine (void)
 {
     bool_t replay = FALSE;
-    char s[32];
-    uint8_t i;
 
     switch (main_state_machine)
     {
@@ -462,7 +480,6 @@ bool_t handleMainStateMachine (void)
 }
 
 /**
- * @brief myrand
  * The user generates random numbers by pressing buttons: we store the time
  * difference between keystrokes.
  * rand() is not good enough for this game.
@@ -479,7 +496,6 @@ uint8_t myrand (void)
 }
 
 /**
- * @brief run
  * Play game.
  */
 void loop()

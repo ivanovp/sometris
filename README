@@ -8,3 +8,9 @@ https://github.com/ivanovp/ZPUino-HDL
 
 Short demo of game:
 http://youtu.be/mgOM_ePGLvY
+
+I've written this first for PIC18F6622. I ported it to Dingoo A320 later.
+Now it can run Papilio One as well.
+More information:
+http://dev.ivanov.eu/index.php?page=sometris-for-papilio
+http://dev.ivanov.eu/index.php?page=game-for-dingoo-a320

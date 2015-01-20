@@ -4,7 +4,7 @@
  * @author      (C) Peter Ivanov, 2013, 2014, 2015
  * 
  * Created:     2013-12-23 11:29:32
- * Last modify: 2015-01-20 17:56:18 ivanovp {Time-stamp}
+ * Last modify: 2015-01-20 18:13:54 ivanovp {Time-stamp}
  * Licence:     GPL
  */
 #include "common.h"
@@ -22,7 +22,7 @@
 #define DEBUG_JOYSTICK      0
 #define ENABLE_COLOR_TEST   0
 
-/* Left, right, up, down and trigger names refer to joystick A */
+/* Left, right, up, down and trigger names refer to joystick A/B */
 uint8_t prevLeft, prevRight, prevUp, prevDown, prevTrigger;
 uint8_t actLeft, actRight, actUp, actDown, actTrigger;
 bool leftPressed, rightPressed, upPressed, downPressed, triggerPressed;
@@ -67,6 +67,11 @@ void _zpu_interrupt ()
   }
 }
 
+/**
+ * Waste time.
+ *
+ * @param[in] ms Milliseconds to delay.
+ */ 
 void delay_ms (uint16_t ms)
 {
     timer_cntr = ms;
@@ -75,6 +80,9 @@ void delay_ms (uint16_t ms)
     }
 }
 
+/**
+ * Setup VGA output if not Arcade Megawing is used.
+ */
 void setup_pin_select()
 {
   pinMode(VGA_HSYNC,OUTPUT);
@@ -164,6 +172,9 @@ void setup()
   init ();
 }  
 
+/**
+ * Button handler.
+ */
 void check_joystick()
 {  
 #if DEBUG_JOYSTICK == 1

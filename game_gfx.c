@@ -384,6 +384,8 @@ void printCommon (void)
     printDecByte (MAP_SIZE_X_PX + INFO_SPACE_X_PX, 4 * FONT_SIZE_Y_PX, game.level, INFO_COLOR, INFO_BG_COLOR);
     printtext    (MAP_SIZE_X_PX + INFO_SPACE_X_PX, 6 * FONT_SIZE_Y_PX, "Difficulty:", INFO_COLOR, INFO_BG_COLOR);
     printDecByte (MAP_SIZE_X_PX + INFO_SPACE_X_PX, 7 * FONT_SIZE_Y_PX, game.block_types, INFO_COLOR, INFO_BG_COLOR);
+    printtext    (MAP_SIZE_X_PX + INFO_SPACE_X_PX, 9 * FONT_SIZE_Y_PX, "Counter:", INFO_COLOR, INFO_BG_COLOR);
+    printDecByte (MAP_SIZE_X_PX + INFO_SPACE_X_PX, 10 * FONT_SIZE_Y_PX, game.figure_counter, INFO_COLOR, INFO_BG_COLOR);
 }
 
 void drawGameScreen (void)

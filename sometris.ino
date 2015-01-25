@@ -7,9 +7,14 @@
  * Last modify: 2015-01-20 18:13:54 ivanovp {Time-stamp}
  * Licence:     GPL
  */
+#define circuit Arcade_MegaWing
+
 #include "common.h"
 #include "game_gfx.h"
 #include "game_common.h"
+//#include <Timer.h>
+
+#define ZPU_VER             0
 
 #define VGABASE             IO_SLOT(9)
 #define CHARRAMBASE         IO_SLOT(10)
@@ -43,6 +48,15 @@ const volatile unsigned int* chargen_memory = &CHARRAMPTR;
 
 void init ();
 
+#if ZPU_VER == 2
+void timer ()
+{
+  if (timer_cntr)
+  {
+    timer_cntr--;      
+  }
+}
+#elif ZPU_VER == 1
 void _zpu_interrupt ()
 {
   static uint8_t tick_prescaler = 10;
@@ -66,6 +80,8 @@ void _zpu_interrupt ()
     TMR0CTL &= ~ (1 << TCTLIF );
   }
 }
+#else
+#endif
 
 /**
  * Waste time.
@@ -80,6 +96,7 @@ void delay_ms (uint16_t ms)
     }
 }
 
+#if 0
 /**
  * Setup VGA output if not Arcade Megawing is used.
  */
@@ -125,6 +142,7 @@ void setup_pin_select()
 //  outputPinForFunction(VGA_BLUE1, 13);
 //  pinModePPS(VGA_BLUE1, HIGH);     
 }
+#endif
 
 void setup()
 {
@@ -134,28 +152,36 @@ void setup()
 
 #if USE_JOYSTICK_A == 1
   // Atari Joystick on DSUB9 connector
-  pinMode (WC12, OUTPUT);    // GND
-  digitalWrite (WC12, LOW);  // set low
-  pinMode (WC13, INPUT);
-  pinMode (WC11, INPUT);
-  pinMode (WC10, INPUT);
-  pinMode (WC9, INPUT);
-  pinMode (WC8, INPUT);
+  pinMode (WING_C_12, OUTPUT);    // GND
+  digitalWrite (WING_C_12, LOW);  // set low
+  pinMode (WING_C_13, INPUT);
+  pinMode (WING_C_11, INPUT);
+  pinMode (WING_C_10, INPUT);
+  pinMode (WING_C_9, INPUT);
+  pinMode (WING_C_8, INPUT);
 #endif
   
 #if USE_JOYSTICK_B == 1
   // Atari Joystick on DSUB9 connector
-  pinMode (WA0, OUTPUT);    // GND
-  digitalWrite (WA0, LOW);  // set low
-  pinMode (WB12, INPUT);
-  pinMode (WB14, INPUT);
-  pinMode (WB15, INPUT);
-  pinMode (WA1, INPUT);
-  pinMode (WB13, INPUT);
+  pinMode (WING_A_0, OUTPUT);    // GND
+  digitalWrite (WING_A_0, LOW);  // set low
+  pinMode (WING_B_12, INPUT);
+  pinMode (WING_B_14, INPUT);
+  pinMode (WING_B_15, INPUT);
+  pinMode (WING_A_1, INPUT);
+  pinMode (WING_B_13, INPUT);
 #endif
   
   clear();
-  
+
+#if ZPU_VER == 2
+  Timers.begin();
+  int r = Timers.periodicHz(1000, (bool(*)(void*))timer, 0, 1);
+  if (r < 0) 
+  {
+      Serial.println("Fatal error!");
+  }
+#elif ZPU_VER == 1
   // Clear timer counter.
   TMR0CNT = 0;
  
@@ -168,7 +194,8 @@ void setup()
  
   // Globally enable interrupts.
   INTRCTL = (1 << 0);
-
+#else
+#endif
   init ();
 }  
 
@@ -181,28 +208,28 @@ void check_joystick()
   char s[6] = "-----";
 #endif
   // Internal joystick
-  actUp = digitalRead (WA11);       // reset button
-  actDown = digitalRead (WB10);
-  actLeft = digitalRead (WB8);
-  actRight = digitalRead (WB11);
-  actTrigger = digitalRead (WB9);   // up button
+  actUp = digitalRead (WING_A_11);       // reset button
+  actDown = digitalRead (WING_B_10);
+  actLeft = digitalRead (WING_B_8);
+  actRight = digitalRead (WING_B_11);
+  actTrigger = digitalRead (WING_B_9);   // up button
 
 #if USE_JOYSTICK_A == 1
   // Joystick A
-  actUp |= digitalRead (WC8) == HIGH ? LOW : HIGH;
-  actDown |= digitalRead (WC10) == HIGH ? LOW : HIGH;
-  actLeft |= digitalRead (WC11) == HIGH ? LOW : HIGH;
-  actRight |= digitalRead (WC13) == HIGH ? LOW : HIGH;
-  actTrigger |= digitalRead (WC9) == HIGH ? LOW : HIGH;
+  actUp |= digitalRead (WING_C_8) == HIGH ? LOW : HIGH;
+  actDown |= digitalRead (WING_C_10) == HIGH ? LOW : HIGH;
+  actLeft |= digitalRead (WING_C_11) == HIGH ? LOW : HIGH;
+  actRight |= digitalRead (WING_C_13) == HIGH ? LOW : HIGH;
+  actTrigger |= digitalRead (WING_C_9) == HIGH ? LOW : HIGH;
 #endif
 
 #if USE_JOYSTICK_B == 1
   // Joystick B
-  actUp |= digitalRead (WB12) == HIGH ? LOW : HIGH;
-  actDown |= digitalRead (WB14) == HIGH ? LOW : HIGH;
-  actLeft |= digitalRead (WB15) == HIGH ? LOW : HIGH;
-  actRight |= digitalRead (WA1) == HIGH ? LOW : HIGH;
-  actTrigger |= digitalRead (WB13) == HIGH ? LOW : HIGH;
+  actUp |= digitalRead (WING_B_12) == HIGH ? LOW : HIGH;
+  actDown |= digitalRead (WING_B_14) == HIGH ? LOW : HIGH;
+  actLeft |= digitalRead (WING_B_15) == HIGH ? LOW : HIGH;
+  actRight |= digitalRead (WING_A_1) == HIGH ? LOW : HIGH;
+  actTrigger |= digitalRead (WING_B_13) == HIGH ? LOW : HIGH;
 #endif
 
   upPressed = false;

@@ -12,9 +12,9 @@
 #include "common.h"
 #include "game_gfx.h"
 #include "game_common.h"
-//#include <Timer.h>
+#include <Timer.h>
 
-#define ZPU_VER             0
+#define ZPU_VER             2
 
 #define VGABASE             IO_SLOT(9)
 #define CHARRAMBASE         IO_SLOT(10)
@@ -24,7 +24,8 @@
 
 #define USE_JOYSTICK_A      1
 #define USE_JOYSTICK_B      1
-#define DEBUG_JOYSTICK      0
+#define DEBUG_JOYSTICK      1
+#define DEBUG_STATEMACHINE  1
 #define ENABLE_COLOR_TEST   0
 
 /* Left, right, up, down and trigger names refer to joystick A/B */
@@ -150,10 +151,17 @@ void setup()
   //Uncomment this if you are using the pinselect variant
   //setup_pin_select();
 
+  // Buttons on Arcade MegaWing
+  pinMode (WING_A_11, INPUT);
+  pinMode (WING_B_10, INPUT);
+  pinMode (WING_B_8, INPUT);
+  pinMode (WING_B_11, INPUT);
+  pinMode (WING_B_9, INPUT);
+
 #if USE_JOYSTICK_A == 1
   // Atari Joystick on DSUB9 connector
   pinMode (WING_C_12, OUTPUT);    // GND
-  digitalWrite (WING_C_12, LOW);  // set low
+  //digitalWrite (WING_C_12, LOW);  // set low
   pinMode (WING_C_13, INPUT);
   pinMode (WING_C_11, INPUT);
   pinMode (WING_C_10, INPUT);
@@ -164,7 +172,7 @@ void setup()
 #if USE_JOYSTICK_B == 1
   // Atari Joystick on DSUB9 connector
   pinMode (WING_A_0, OUTPUT);    // GND
-  digitalWrite (WING_A_0, LOW);  // set low
+  //digitalWrite (WING_A_0, LOW);  // set low
   pinMode (WING_B_12, INPUT);
   pinMode (WING_B_14, INPUT);
   pinMode (WING_B_15, INPUT);
@@ -216,20 +224,20 @@ void check_joystick()
 
 #if USE_JOYSTICK_A == 1
   // Joystick A
-  actUp |= digitalRead (WING_C_8) == HIGH ? LOW : HIGH;
-  actDown |= digitalRead (WING_C_10) == HIGH ? LOW : HIGH;
-  actLeft |= digitalRead (WING_C_11) == HIGH ? LOW : HIGH;
-  actRight |= digitalRead (WING_C_13) == HIGH ? LOW : HIGH;
-  actTrigger |= digitalRead (WING_C_9) == HIGH ? LOW : HIGH;
+  actUp |= digitalRead (WING_C_8);
+  actDown |= digitalRead (WING_C_10);
+  actLeft |= digitalRead (WING_C_11);
+  actRight |= digitalRead (WING_C_13);
+  actTrigger |= digitalRead (WING_C_9);
 #endif
 
 #if USE_JOYSTICK_B == 1
   // Joystick B
-  actUp |= digitalRead (WING_B_12) == HIGH ? LOW : HIGH;
-  actDown |= digitalRead (WING_B_14) == HIGH ? LOW : HIGH;
-  actLeft |= digitalRead (WING_B_15) == HIGH ? LOW : HIGH;
-  actRight |= digitalRead (WING_A_1) == HIGH ? LOW : HIGH;
-  actTrigger |= digitalRead (WING_B_13) == HIGH ? LOW : HIGH;
+  actUp |= digitalRead (WING_B_12);
+  actDown |= digitalRead (WING_B_14);
+  actLeft |= digitalRead (WING_B_15);
+  actRight |= digitalRead (WING_A_1);
+  actTrigger |= digitalRead (WING_B_13);
 #endif
 
   upPressed = false;
@@ -293,7 +301,7 @@ void check_joystick()
 #endif
   }
 #if DEBUG_JOYSTICK == 1
-  printtext (MAP_SIZE_X_PX + INFO_SPACE_X_PX, FONT_SIZE_Y_PX * 9, s, 0xff, 0x3);
+  printtext (MAP_SIZE_X_PX + INFO_SPACE_X_PX, FONT_SIZE_Y_PX * 11, s, 0xff, 0x3);
 #endif
   prevUp = actUp;
   prevDown = actDown;
@@ -420,7 +428,12 @@ void handleMovement (void)
 bool_t handleMainStateMachine (void)
 {
     bool_t replay = FALSE;
+#if DEBUG_STATEMACHINE == 1
+    static uint16_t sm_cntr = 0;
 
+    printHexWord(0, 110, sm_cntr, 0xf0, 0x00);
+    sm_cntr++;
+#endif
     switch (main_state_machine)
     {
         case STATE_difficulty_selection:
@@ -525,12 +538,12 @@ bool_t handleMainStateMachine (void)
  */
 uint8_t myrand (void)
 {
-    uint8_t random;
+    uint8_t rnd;
 
-    random = key_delta[key_delta_ridx];
+    rnd = key_delta[key_delta_ridx];
     key_delta_ridx++;
     key_delta_ridx &= KEY_DELTA_IDX_MASK;
-    return random;
+    return rnd;
 }
 
 /**

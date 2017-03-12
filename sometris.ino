@@ -22,8 +22,8 @@
 #define VGAPTR              REGISTER(VGABASE,0);
 #define CHARRAMPTR          REGISTER(CHARRAMBASE,0);
 
-#define USE_JOYSTICK_A      0
-#define USE_JOYSTICK_B      0
+#define USE_JOYSTICK_A      1
+#define USE_JOYSTICK_B      1
 #define DEBUG_JOYSTICK      0
 #define DEBUG_STATEMACHINE  0
 #define DEBUG_TICK          0
@@ -116,7 +116,7 @@ void setup()
 #if USE_JOYSTICK_A == 1
   // Atari Joystick on DSUB9 connector
   pinMode (WING_CH4, OUTPUT);    // GND
-  //digitalWrite (WING_CH4, LOW);  // set low
+  digitalWrite (WING_CH4, LOW);  // set low
   pinMode (WING_CH0, INPUT);
   pinMode (WING_CH2, INPUT);
   pinMode (WING_CH3, INPUT);
@@ -127,7 +127,7 @@ void setup()
 #if USE_JOYSTICK_B == 1
   // Atari Joystick on DSUB9 connector
   pinMode (WING_AL0, OUTPUT);    // GND
-  //digitalWrite (WING_AL0, LOW);  // set low
+  digitalWrite (WING_AL0, LOW);  // set low
   pinMode (WING_BH4, INPUT);
   pinMode (WING_BH6, INPUT);
   pinMode (WING_BH7, INPUT);
@@ -179,20 +179,20 @@ void check_joystick()
 
 #if USE_JOYSTICK_A == 1
   // Joystick A
-  actUp |= digitalRead (WING_CH0);
-  actDown |= digitalRead (WING_CH2);
-  actLeft |= digitalRead (WING_CH3);
-  actRight |= digitalRead (WING_CH5);
-  actTrigger |= digitalRead (WING_CH1);
+  actUp |= digitalRead (WING_CH0) == HIGH ? LOW : HIGH;
+  actDown |= digitalRead (WING_CH2) == HIGH ? LOW : HIGH;
+  actLeft |= digitalRead (WING_CH3) == HIGH ? LOW : HIGH;
+  actRight |= digitalRead (WING_CH5) == HIGH ? LOW : HIGH;
+  actTrigger |= digitalRead (WING_CH1) == HIGH ? LOW : HIGH;
 #endif
 
 #if USE_JOYSTICK_B == 1
   // Joystick B
-  actUp |= digitalRead (WING_BH4);
-  actDown |= digitalRead (WING_BH6);
-  actLeft |= digitalRead (WING_BH7);
-  actRight |= digitalRead (WING_AL1);
-  actTrigger |= digitalRead (WING_BH5);
+  actUp |= digitalRead (WING_BH4) == HIGH ? LOW : HIGH;
+  actDown |= digitalRead (WING_BH6) == HIGH ? LOW : HIGH;
+  actLeft |= digitalRead (WING_BH7) == HIGH ? LOW : HIGH;
+  actRight |= digitalRead (WING_AL1) == HIGH ? LOW : HIGH;
+  actTrigger |= digitalRead (WING_BH5) == HIGH ? LOW : HIGH;
 #endif
 
   upPressed = false;

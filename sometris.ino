@@ -1,10 +1,10 @@
 /**
  * @file        sometris.ino
  * @brief       Tetris-like game
- * @author      (C) Peter Ivanov, 2013, 2014, 2015
+ * @author      (C) Peter Ivanov, 2013, 2014, 2015, 2017
  * 
  * Created:     2013-12-23 11:29:32
- * Last modify: 2015-01-20 18:13:54 ivanovp {Time-stamp}
+ * Last modify: 2017-03-11 14:51:29 ivanovp {Time-stamp}
  * Licence:     GPL
  */
 #define circuit Arcade_MegaWing
@@ -22,10 +22,11 @@
 #define VGAPTR              REGISTER(VGABASE,0);
 #define CHARRAMPTR          REGISTER(CHARRAMBASE,0);
 
-#define USE_JOYSTICK_A      1
-#define USE_JOYSTICK_B      1
-#define DEBUG_JOYSTICK      1
-#define DEBUG_STATEMACHINE  1
+#define USE_JOYSTICK_A      0
+#define USE_JOYSTICK_B      0
+#define DEBUG_JOYSTICK      0
+#define DEBUG_STATEMACHINE  0
+#define DEBUG_TICK          0
 #define ENABLE_COLOR_TEST   0
 
 /* Left, right, up, down and trigger names refer to joystick A/B */
@@ -50,12 +51,15 @@ const volatile unsigned int* chargen_memory = &CHARRAMPTR;
 void init ();
 
 #if ZPU_VER == 2
-void timer ()
+bool timer (void*)
 {
+  tick_cntr++;
   if (timer_cntr)
   {
-    timer_cntr--;      
+    timer_cntr--;
   }
+  
+  return true;
 }
 #elif ZPU_VER == 1
 void _zpu_interrupt ()
@@ -82,6 +86,7 @@ void _zpu_interrupt ()
   }
 }
 #else
+#error Unknown ZPU version!
 #endif
 
 /**
@@ -97,94 +102,44 @@ void delay_ms (uint16_t ms)
     }
 }
 
-#if 0
-/**
- * Setup VGA output if not Arcade Megawing is used.
- */
-void setup_pin_select()
-{
-  pinMode(VGA_HSYNC,OUTPUT);
-  digitalWrite(VGA_HSYNC,HIGH);
-  outputPinForFunction(VGA_HSYNC, 15);
-  pinModePPS(VGA_HSYNC, HIGH);
-
-  pinMode(VGA_VSYNC,OUTPUT);
-  digitalWrite(VGA_VSYNC,HIGH);
-  outputPinForFunction(VGA_VSYNC, 14);
-  pinModePPS(VGA_VSYNC, HIGH);   
-  
-  pinMode(VGA_RED0,OUTPUT);
-  digitalWrite(VGA_RED0,HIGH);
-  outputPinForFunction(VGA_RED0, 8);
-  pinModePPS(VGA_RED0, HIGH);   
-
-//  pinMode(VGA_RED1,OUTPUT);
-//  digitalWrite(VGA_RED1,HIGH);
-//  outputPinForFunction(VGA_RED1, 9);
-//  pinModePPS(VGA_RED1, HIGH); 
-  
-  pinMode(VGA_GREEN0,OUTPUT);
-  digitalWrite(VGA_GREEN0,HIGH);
-  outputPinForFunction(VGA_GREEN0, 10);
-  pinModePPS(VGA_GREEN0, HIGH); 
-
-//  pinMode(VGA_GREEN1,OUTPUT);
-//  digitalWrite(VGA_GREEN1,HIGH);
-//  outputPinForFunction(VGA_GREEN1, 11);
-//  pinModePPS(VGA_GREEN1, HIGH); 
-
-  pinMode(VGA_BLUE0,OUTPUT);
-  digitalWrite(VGA_BLUE0,HIGH);
-  outputPinForFunction(VGA_BLUE0, 12);
-  pinModePPS(VGA_BLUE0, HIGH); 
-
-//  pinMode(VGA_BLUE1,OUTPUT);
-//  digitalWrite(VGA_BLUE1,HIGH);
-//  outputPinForFunction(VGA_BLUE1, 13);
-//  pinModePPS(VGA_BLUE1, HIGH);     
-}
-#endif
-
 void setup()
 {
   Serial.begin(9600);
-  //Uncomment this if you are using the pinselect variant
-  //setup_pin_select();
 
   // Buttons on Arcade MegaWing
-  pinMode (WING_A_11, INPUT);
-  pinMode (WING_B_10, INPUT);
-  pinMode (WING_B_8, INPUT);
-  pinMode (WING_B_11, INPUT);
-  pinMode (WING_B_9, INPUT);
+  pinMode (WING_AH3, INPUT);
+  pinMode (WING_BH2, INPUT);
+  pinMode (WING_BH0, INPUT);
+  pinMode (WING_BH3, INPUT);
+  pinMode (WING_BH1, INPUT);
 
 #if USE_JOYSTICK_A == 1
   // Atari Joystick on DSUB9 connector
-  pinMode (WING_C_12, OUTPUT);    // GND
-  //digitalWrite (WING_C_12, LOW);  // set low
-  pinMode (WING_C_13, INPUT);
-  pinMode (WING_C_11, INPUT);
-  pinMode (WING_C_10, INPUT);
-  pinMode (WING_C_9, INPUT);
-  pinMode (WING_C_8, INPUT);
+  pinMode (WING_CH4, OUTPUT);    // GND
+  //digitalWrite (WING_CH4, LOW);  // set low
+  pinMode (WING_CH0, INPUT);
+  pinMode (WING_CH2, INPUT);
+  pinMode (WING_CH3, INPUT);
+  pinMode (WING_CH5, INPUT);
+  pinMode (WING_CH1, INPUT);
 #endif
   
 #if USE_JOYSTICK_B == 1
   // Atari Joystick on DSUB9 connector
-  pinMode (WING_A_0, OUTPUT);    // GND
-  //digitalWrite (WING_A_0, LOW);  // set low
-  pinMode (WING_B_12, INPUT);
-  pinMode (WING_B_14, INPUT);
-  pinMode (WING_B_15, INPUT);
-  pinMode (WING_A_1, INPUT);
-  pinMode (WING_B_13, INPUT);
+  pinMode (WING_AL0, OUTPUT);    // GND
+  //digitalWrite (WING_AL0, LOW);  // set low
+  pinMode (WING_BH4, INPUT);
+  pinMode (WING_BH6, INPUT);
+  pinMode (WING_BH7, INPUT);
+  pinMode (WING_AL1, INPUT);
+  pinMode (WING_BH5, INPUT);
 #endif
   
   clear();
 
 #if ZPU_VER == 2
   Timers.begin();
-  int r = Timers.periodicHz(1000, (bool(*)(void*))timer, 0, 1);
+  int r = Timers.periodicHz(TICKS_PER_SEC, timer, 0, 1);
   if (r < 0) 
   {
       Serial.println("Fatal error!");
@@ -216,28 +171,28 @@ void check_joystick()
   char s[6] = "-----";
 #endif
   // Internal joystick
-  actUp = digitalRead (WING_A_11);       // reset button
-  actDown = digitalRead (WING_B_10);
-  actLeft = digitalRead (WING_B_8);
-  actRight = digitalRead (WING_B_11);
-  actTrigger = digitalRead (WING_B_9);   // up button
+  actUp = digitalRead (WING_AH3);       // reset button
+  actDown = digitalRead (WING_BH2);
+  actLeft = digitalRead (WING_BH0);
+  actRight = digitalRead (WING_BH3);
+  actTrigger = digitalRead (WING_BH1);   // up button
 
 #if USE_JOYSTICK_A == 1
   // Joystick A
-  actUp |= digitalRead (WING_C_8);
-  actDown |= digitalRead (WING_C_10);
-  actLeft |= digitalRead (WING_C_11);
-  actRight |= digitalRead (WING_C_13);
-  actTrigger |= digitalRead (WING_C_9);
+  actUp |= digitalRead (WING_CH0);
+  actDown |= digitalRead (WING_CH2);
+  actLeft |= digitalRead (WING_CH3);
+  actRight |= digitalRead (WING_CH5);
+  actTrigger |= digitalRead (WING_CH1);
 #endif
 
 #if USE_JOYSTICK_B == 1
   // Joystick B
-  actUp |= digitalRead (WING_B_12);
-  actDown |= digitalRead (WING_B_14);
-  actLeft |= digitalRead (WING_B_15);
-  actRight |= digitalRead (WING_A_1);
-  actTrigger |= digitalRead (WING_B_13);
+  actUp |= digitalRead (WING_BH4);
+  actDown |= digitalRead (WING_BH6);
+  actLeft |= digitalRead (WING_BH7);
+  actRight |= digitalRead (WING_AL1);
+  actTrigger |= digitalRead (WING_BH5);
 #endif
 
   upPressed = false;
@@ -566,6 +521,10 @@ replay:
 
     while (1)
     {
+#if DEBUG_TICK != 0
+        printHexWord(96, 110, tick_cntr >> 16, 0xf0, 0x00);
+        printHexWord(128, 110, tick_cntr, 0xf0, 0x00);
+#endif
         collectRandomNumbers ();
 
         do_replay = handleMainStateMachine ();
